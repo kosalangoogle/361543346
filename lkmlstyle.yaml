@@ -1,0 +1,78 @@
+# This file is used by the spectacles code linter to indicate which rules shall be applied and which directories shall be linted. 
+# You can find a detailed description of the rules here: https://deploy-preview-132--affectionate-shaw-852a45.netlify.app/app/reference/style-validator-rules/
+# The general documentation of the spectacles linter can be found here: https://docs.spectacles.dev/app/tutorials/validators/#the-style-validator
+# This is a list of fundamental rules that should always be complied with and should stritly be enforced through a hard CI check.
+select:
+  - D101
+  - D107
+  - J100
+  - M103
+  - M110
+  - V100
+  - V110
+  - V112
+# Below are Epidemic Sound specific custom rules defined further below in this script
+  - CE100
+  - CE101
+  - CE102
+  - CE103
+
+# Due to the characteristics of auto-generated views (from tables), some rules will not be complied with. 
+# The relevant amendments (e.g. adding a primary key, adding a complete set of descriptions) will instead live in refinement folders.
+file_overrides:
+  - path: 1_schema # Excluded as it contains most of the auto-generated views
+    ignore:
+      - D107
+      - M110
+      - V110
+      - CE101
+      - CE103
+  - path: 3_features # Excluded as it still holds several auto-generated views and pdts. We may want to remove this at a later stage
+    ignore:
+      - D107
+      - M110
+      - V110
+  - path: 4_derived_tables # Excluded as the base view of a pdt will not contain descriptions, primary keys, etc.
+    ignore:
+      - D107
+      - M110
+      - V110
+      
+# Here we define a set of custom rules that are specific to the Epidemic Sound Looker Project
+custom_rules:
+  - title: Explore label does not start with exactly one of the following emojis [✅⚠⛔️]
+    code: CE100
+    rationale: Emojis act as flags to indicate to users whether the data is trustworthy to avoid business decisions being made based on faulty data. They should always be included at the beginning of the explore label.
+    select:
+      - explore.label
+    regex: ^(✅|⚠️|⛔️)(?!.*(✅|⚠️|⛔️))
+    negative: false
+    type: PatternMatchRule
+  - title: Explore does not have a description
+    code: CE101
+    rationale: Allow both users as well as developer understand the purpose of the explore. This applies to both hidden and visible explores.
+    select:
+    - explore
+    criteria:
+    - type: ParameterFilter
+      parameter_name: description
+    negative: false
+    type: ParameterRule
+  - title: Explore group_label is not one of 'Central Teams', 'DRM', 'Growth', 'Main', 'Partnerships', 'Partnerships & DRM', 'Sound', 'Soundtrack', 'Tech & Tools', 'Commercial', 'Product'
+    code: CE102
+    rationale: The label needs to clearly state the ownership of a specific explore for maintenance purposes.
+    select:
+    - explore.group_label
+    regex: ^(?:Soundtrack|Growth|Main|Tech & Tools|Sound|Partnerships & DRM|DRM|Partnerships|Central Teams|Commercial|Product)$
+    negative: false
+    type: PatternMatchRule
+  - title: Explore does not have a group_label
+    code: CE103
+    rationale: A group_label is used to determine the ownership of a specific explore for maintenance purposes
+    select:
+    - explore
+    criteria:
+    - type: ParameterFilter
+      parameter_name: group_label
+    negative: false
+    type: ParameterRule
